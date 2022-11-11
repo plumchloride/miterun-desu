@@ -1,0 +1,47 @@
+:root {
+  --navbg:#529DF1;
+  --navtext:#DCFAFE;
+  --bg:#DCFAFE;
+  --text:#529DF1;
+}
+
+.non-visi{
+  display: none;
+}
+body{
+  background-color: var(--bg);
+}
+nav{
+  background-color: var(--navbg);
+  display: block;
+  color: var(--navtext);
+  margin-bottom: 10px;
+}
+h1{
+  margin: 0;
+  padding: 10px;
+  font-family: "Nico Moji";
+  font-size: 36px;
+}
+#contents_body{
+  display: flex;
+  padding: 10px;
+  align-items: center;
+  flex-direction: column;
+}
+
+
+#cam_on{
+  color: var(--text);
+}
+#cam_off{
+  color: #ef776f;
+}
+#cam_ui{
+  margin-top: 10px;
+  padding: 10px;
+}
+
+.output_canvas{
+  width: 80vw;
+}
