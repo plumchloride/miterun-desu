@@ -13,7 +13,6 @@ let on_cam = false;
 let show_face = true;
 let send_count = 0;
 let kirisute_num = 2;
-let comunicate = true;
 let dec_eye = true;
 let close_val = 5;
 let eye_close = {"l":false,"r":false}
@@ -122,19 +121,52 @@ canvasCtx.fill();
 const $eye = {"l":document.getElementById("left_eye_info"),"r":document.getElementById("right_eye_info")};
 const adjustment_time = 1
 const out_time = 5
-let current_mode = "safe" // safe=>1秒連続で目閉じ=>care=>5秒80%以上目閉じ=>out  out=>1秒80%以上目開け=>safe
+let current_mode = "safe" // safe=>1秒連続で目閉じ=>care=>5秒70%以上目閉じ=>out  out=>5秒80%以上目開け=>safe
 let left_eye = {"time":[],"flag":[]}
-let right_eye = {"time":[],"flag":[]}
+let right_eye = {"flag":[]}
 const eye_check = (eye_obj,dectation)=>{
   var current_time = Date.now()/1000
 
   left_eye.flag.push(eye_obj.l);
   left_eye.time.push(current_time);
   right_eye.flag.push(eye_obj.r);
-  right_eye.time.push(current_time);
 
   if(current_mode == "safe"){
-    ;
+    left_eye.time = left_eye.time.filter(val =>Math.abs(val-current_time)<1);
+    var fil_leng = left_eye.time.length
+    left_eye.flag = left_eye.flag.splice(left_eye.flag.length-fil_leng,left_eye.flag.length)
+    right_eye.flag = right_eye.flag.splice(right_eye.flag.length-fil_leng,right_eye.flag.length)
+    var r_sum = right_eye.flag.reduce((sum, element) => sum + element, 0);
+    var l_sum = left_eye.flag.reduce((sum, element) => sum + element, 0);
+    // 1秒間目を閉じている
+    console.log(l_sum/fil_leng,r_sum/fil_leng)
+    if(r_sum == fil_leng && l_sum == fil_leng){
+      current_mode == "care"
+      left_eye = {"time":[],"flag":[]}
+      right_eye = {"flag":[]}
+    }
+  }else if(current_mode == "care"){
+    left_eye.time = left_eye.time.filter(val =>Math.abs(val-current_time)<5);
+    var fil_leng = left_eye.time.length
+    left_eye.flag = left_eye.flag.splice(left_eye.flag.length-fil_leng,left_eye.flag.length)
+    right_eye.flag = right_eye.flag.splice(right_eye.flag.length-fil_leng,right_eye.flag.length)
+    var r_sum = right_eye.flag.reduce((sum, element) => sum + element, 0);
+    var l_sum = left_eye.flag.reduce((sum, element) => sum + element, 0);
+    // 4.5秒以上データがたまっているかつそれぞれ８割以上目を閉じている
+    if(left_eye.time[0] < current_time - 4.5 && r_sum/fil_leng > 0.7 && l_sum/fil_leng > 0.7){
+      current_mode == "out"
+    }
+  }else if(current_mode == "out"){
+    left_eye.time = left_eye.time.filter(val =>Math.abs(val-current_time)<5);
+    var fil_leng = left_eye.time.length
+    left_eye.flag = left_eye.flag.splice(left_eye.flag.length-fil_leng,left_eye.flag.length)
+    right_eye.flag = right_eye.flag.splice(right_eye.flag.length-fil_leng,right_eye.flag.length)
+    var r_sum = right_eye.flag.reduce((sum, element) => sum + element, 0);
+    var l_sum = left_eye.flag.reduce((sum, element) => sum + element, 0);
+    // 4.5秒以上データがたまっているかつそれぞれ2割以下目を閉じている
+    if(left_eye.time[0] < current_time - 4.5 && r_sum/fil_leng < 0.2 && l_sum/fil_leng < 0.2){
+      current_mode == "safe"
+    }
   }
   if(dectation){
     if(eye_obj.r){
@@ -150,5 +182,6 @@ const eye_check = (eye_obj,dectation)=>{
   }else{
     $eye.r.innerText = "x"
     $eye.l.innerText = "x"
+    current_mode = "safe"
   }
 }
