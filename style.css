@@ -23,6 +23,12 @@ h1{
   font-family: "Nico Moji";
   font-size: 36px;
 }
+label{
+  user-select: none;
+}
+
+
+
 #contents_body{
   display: flex;
   padding: 10px;
@@ -30,6 +36,17 @@ h1{
   flex-direction: column;
 }
 
+
+#eye_info{
+  font-size: larger;
+  margin-bottom: 10px;
+}
+#miken{
+  margin-right: 10vw;
+}
+input{
+  margin-right: 10px;
+}
 
 #cam_on{
   color: var(--text);
@@ -43,5 +60,5 @@ h1{
 }
 
 .output_canvas{
-  width: 80vw;
+  width: 60vw;
 }
