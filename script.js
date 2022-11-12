@@ -1,7 +1,3 @@
-//  ===========================
-//  顔認識
-//  ===========================
-
 const videoElement = document.getElementsByClassName('input_video')[0];
 const $canvasElements = document.getElementsByClassName('output_canvas');
 const canvasElement = document.getElementsByClassName('output_canvas')[0];
@@ -9,15 +5,15 @@ const $canvas_wrap = document.getElementById("canvases")
 const canvasCtx = canvasElement.getContext('2d');
 const $cam = {"on":document.getElementById("cam_on"),"off":document.getElementById("cam_off")}
 
-let on_cam = false;
 let show_face = true;
-let send_count = 0;
 let kirisute_num = 2;
 let dec_eye = true;
 let close_val = 5;
 let eye_close = {"l":false,"r":false}
 
 function onResults(results) {
+  canvasElement.width = canvasElement.clientWidth
+  canvasElement.height = canvasElement.clientHeight
   canvasCtx.save();
   canvasCtx.scale(-1, 1)
   canvasCtx.translate(-canvasElement.width, 0)
@@ -35,7 +31,6 @@ function onResults(results) {
     for (const landmarks of results.multiFaceLandmarks) {
       dectation = true
       // landmarks {x,y,z} * 478
-      // FACEMESH 1 to 2 に線を引くって言う意味
       // すべて表示
       if(dec_eye){
         // drawConnectors(canvasCtx, landmarks, FACEMESH_TESSELATION,{color: '#C0C0C070', lineWidth: 0.5});
@@ -89,19 +84,15 @@ $cam.off.addEventListener("click",(e)=>{
     $cam.on.classList.remove("non-visi");
     $cam.off.classList.add("non-visi");
     camera.start();
-    on_cam = true;
 });
 $cam.on.addEventListener("click",(e)=>{
     $cam.on.classList.add("non-visi");
     $cam.off.classList.remove("non-visi");
     camera.stop();
-    on_cam = false;
+    left_eye = {"time":[],"flag":[]}
+    right_eye = {"flag":[]}
+    create_botm_bar(canvasCtx,0,0,canvasElement,"safe")
 });
-
-const kirisute = (val,ii)=>{
-    return Math.floor(val*(10**ii))/(10**ii);
-};
-
 
 // チェックボックス
 document.getElementById("face_checke").addEventListener("change",e=>{
@@ -121,7 +112,7 @@ canvasCtx.fill();
 const $eye = {"l":document.getElementById("left_eye_info"),"r":document.getElementById("right_eye_info")};
 const adjustment_time = 1
 const out_time = 5
-let current_mode = "safe" // safe=>1秒連続で目閉じ=>care=>5秒70%以上目閉じ=>out  out=>5秒80%以上目開け=>safe
+let current_mode = "safe" // safe=>5秒5割=>out  out=>5秒8割目開け=>safe
 let left_eye = {"time":[],"flag":[]}
 let right_eye = {"flag":[]}
 const eye_check = (eye_obj,dectation)=>{
@@ -131,30 +122,19 @@ const eye_check = (eye_obj,dectation)=>{
   left_eye.time.push(current_time);
   right_eye.flag.push(eye_obj.r);
 
+  var open_eye = {"l":0,"r":0}
   if(current_mode == "safe"){
-    left_eye.time = left_eye.time.filter(val =>Math.abs(val-current_time)<1);
-    var fil_leng = left_eye.time.length
-    left_eye.flag = left_eye.flag.splice(left_eye.flag.length-fil_leng,left_eye.flag.length)
-    right_eye.flag = right_eye.flag.splice(right_eye.flag.length-fil_leng,right_eye.flag.length)
-    var r_sum = right_eye.flag.reduce((sum, element) => sum + element, 0);
-    var l_sum = left_eye.flag.reduce((sum, element) => sum + element, 0);
-    // 1秒間目を閉じている
-    console.log(l_sum/fil_leng,r_sum/fil_leng)
-    if(r_sum == fil_leng && l_sum == fil_leng){
-      current_mode == "care"
-      left_eye = {"time":[],"flag":[]}
-      right_eye = {"flag":[]}
-    }
-  }else if(current_mode == "care"){
     left_eye.time = left_eye.time.filter(val =>Math.abs(val-current_time)<5);
     var fil_leng = left_eye.time.length
     left_eye.flag = left_eye.flag.splice(left_eye.flag.length-fil_leng,left_eye.flag.length)
     right_eye.flag = right_eye.flag.splice(right_eye.flag.length-fil_leng,right_eye.flag.length)
     var r_sum = right_eye.flag.reduce((sum, element) => sum + element, 0);
     var l_sum = left_eye.flag.reduce((sum, element) => sum + element, 0);
-    // 4.5秒以上データがたまっているかつそれぞれ８割以上目を閉じている
-    if(left_eye.time[0] < current_time - 4.5 && r_sum/fil_leng > 0.7 && l_sum/fil_leng > 0.7){
-      current_mode == "out"
+    open_eye.r = kirisute(r_sum/fil_leng,4)
+    open_eye.l = kirisute(l_sum/fil_leng,4)
+    // 4.5秒以上データがたまっているかつそれぞれ5割以上目を閉じている
+    if(left_eye.time[0] < current_time - 4.5 && r_sum/fil_leng > 0.5 && l_sum/fil_leng > 0.5){
+      current_mode = "out"
     }
   }else if(current_mode == "out"){
     left_eye.time = left_eye.time.filter(val =>Math.abs(val-current_time)<5);
@@ -163,9 +143,11 @@ const eye_check = (eye_obj,dectation)=>{
     right_eye.flag = right_eye.flag.splice(right_eye.flag.length-fil_leng,right_eye.flag.length)
     var r_sum = right_eye.flag.reduce((sum, element) => sum + element, 0);
     var l_sum = left_eye.flag.reduce((sum, element) => sum + element, 0);
+    open_eye.r = kirisute(r_sum/fil_leng,4)
+    open_eye.l = kirisute(l_sum/fil_leng,4)
     // 4.5秒以上データがたまっているかつそれぞれ2割以下目を閉じている
     if(left_eye.time[0] < current_time - 4.5 && r_sum/fil_leng < 0.2 && l_sum/fil_leng < 0.2){
-      current_mode == "safe"
+      current_mode = "safe"
     }
   }
   if(dectation){
@@ -184,4 +166,68 @@ const eye_check = (eye_obj,dectation)=>{
     $eye.l.innerText = "x"
     current_mode = "safe"
   }
+  create_botm_bar(canvasCtx,open_eye.l,open_eye.r,canvasElement,current_mode)
 }
+
+let col = {"out":"#ef776f","safe":"#26c7fe"}
+const create_botm_bar = (ctx,l_per,r_per,cEl,mode)=>{
+  var max_win = {"w":0,"h":0};
+  max_win.w = cEl.width;
+  max_win.h= cEl.height;
+  var use_col = col[mode]
+
+  // 棒の背景削除
+  ctx.fillStyle = "#DCFAFE";
+  ctx.beginPath();
+  ctx.rect(0, max_win.h*19/20,max_win.w, max_win.h/20);
+  ctx.fill();
+
+  // 右目
+  ctx.fillStyle = use_col;
+  ctx.beginPath();
+  ctx.rect(max_win.w/2, max_win.h*19/20,kirisute(max_win.w/2*r_per,0)*-1, max_win.h/20);
+  ctx.fill();
+  // 左目
+  ctx.fillStyle = use_col;
+  ctx.beginPath();
+  ctx.rect(max_win.w/2, max_win.h*19/20,kirisute(max_win.w/2*l_per,0), max_win.h/20);
+  ctx.fill();
+
+  // 閾値
+  ctx.strokeStyle = "#000";
+  ctx.lineWidth = 2;
+  var sikii = 0;
+  if(mode == "safe"){
+    sikii = 0.5;
+  }else{
+    sikii = 0.2;
+  }
+  ctx.beginPath();
+  // 左
+  ctx.moveTo(max_win.w/2-(max_win.w/2*sikii), max_win.h*19/20);
+  ctx.lineTo(max_win.w/2-(max_win.w/2*sikii), max_win.h);
+  // 右
+  ctx.moveTo(max_win.w/2+(max_win.w/2*sikii), max_win.h*19/20);
+  ctx.lineTo(max_win.w/2+(max_win.w/2*sikii), max_win.h);
+  ctx.stroke();
+
+  // 中
+  ctx.strokeStyle = "#555";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(max_win.w/2, max_win.h*19/20);
+  ctx.lineTo(max_win.w/2, max_win.h);
+  ctx.stroke();
+
+  // カメラとの間に線を描画
+  ctx.strokeStyle = "#DCFAFE";
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(0, (max_win.h*19/20)+2);
+  ctx.lineTo(max_win.w, (max_win.h*19/20)+2);
+  ctx.stroke();
+}
+
+const kirisute = (val,ii)=>{
+  return Math.floor(val*(10**ii))/(10**ii);
+};

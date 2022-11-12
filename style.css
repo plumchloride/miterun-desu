@@ -19,7 +19,7 @@ nav{
 }
 h1{
   margin: 0;
-  padding: 10px;
+  padding: 5px;
   font-family: "Nico Moji";
   font-size: 36px;
 }
@@ -35,7 +35,6 @@ label{
   align-items: center;
   flex-direction: column;
 }
-
 
 #eye_info{
   font-size: larger;
@@ -58,7 +57,14 @@ input{
   margin-top: 10px;
   padding: 10px;
 }
-
 .output_canvas{
-  width: 60vw;
+  width: 50vw;
+  height: calc(9*50vw/16);
+}
+
+@media screen and (max-width: 1000px) {
+  .output_canvas{
+    width: 60vw;
+    height: calc(9*60vw/16);
+  }
 }
