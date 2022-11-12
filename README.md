@@ -5,3 +5,6 @@
 顔の認識には mediapipe を用いています
 
 https://plumchloride.github.io/miterun-desu/
+
+## システム構成図
+![image](https://user-images.githubusercontent.com/70005022/201461751-0581dc4d-2863-4c5e-91ea-8bd37cc6cf19.png)
